@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ai Là Triệu Phú - Bi kịch Hamlet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .container-wrapper {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .question-card, .help-section, .quiz-ladder {
+            background-color: #1f2937;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+            border: 1px solid #334155;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Thanh Tiến Độ Đổi Màu */
+        .progress-bar-inner {
+            transition: width 0.5s ease-in-out, background-color 0.5s;
+        }
+        
+        .question-text {
+            min-height: 100px; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+        
+        .option-button {
+            background: #334155;
+            border: 2px solid #64748b;
+            color: #f8fafc;
+            transition: all 0.2s;
+            position: relative;
+            box-shadow: 0 4px #475569; 
+        }
+
+        .option-button:not([disabled]):hover {
+            background: #475569;
+            transform: translateY(-2px);
+            box-shadow: 0 6px #475569;
+        }
+        
+        .option-button:active:not([disabled]) {
+            transform: translateY(2px);
+            box-shadow: 0 2px #475569;
+        }
+
+        .option-button[disabled] {
+            cursor: not-allowed;
+            opacity: 0.7;
+            background: #334155 !important;
+        }
+
+        .option-letter {
+            font-weight: 700;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        /* Thang tiền */
+        .level-item {
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+        }
+        .current-level {
+            background-color: #fcd34d;
+            color: #1f2937;
+            font-weight: 700;
+            box-shadow: 0 0 10px #fcd34d;
+        }
+        .safe-level {
+            background-color: #10b981;
+            font-weight: 700;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s;
+        }
+        .modal-overlay.open {
+            visibility: visible;
+            opacity: 1;
+        }
+        .modal-content {
+            background-color: #1f2937;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 550px;
+            width: 90%;
+            transform: scale(0.95);
+            transition: transform 0.3s;
+            border: 2px solid #334155;
+        }
+        .modal-overlay.open .modal-content {
+            transform: scale(1);
+        }
+        .modal-title {
+            color: #fcd34d;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fcd34d;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-active .loading-spinner {
+            display: inline-block;
+        }
+
+        /* Hiệu ứng đáp án */
+        .correct-answer {
+            background: #10b981 !important;
+            border-color: #059669 !important;
+            box-shadow: 0 4px #059669 !important;
+            color: #ffffff !important;
+        }
+        .wrong-answer {
+            background: #ef4444 !important;
+            border-color: #dc2626 !important;
+            box-shadow: 0 4px #dc2626 !important;
+            color: #ffffff !important;
+        }
+
+        /* Khảo sát trường quay - style cho thanh phần trăm */
+        .survey-bar-container {
+            flex-grow: 1;
+            height: 16px; 
+            background-color: #475569;
+            border-radius: 8px;
+            margin: 0 8px;
+            overflow: hidden; 
+        }
+        .survey-bar {
+            height: 100%;
+            border-radius: 8px; 
+            transition: width 0.5s ease-out;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container-wrapper">
+        <header class="text-center py-6 flex flex-col items-center">
+            
+
+<img src="https://upload.wikimedia.org/wikipedia/vi/thumb/c/cb/ALTP_LOGO_2021.png/250px-ALTP_LOGO_2021.png" alt="Ai Là Triệu Phú Logo" class="w-32 md:w-48 mb-4">
+            <h1 class="text-4xl font-bold text-yellow-400">AI LÀ TRIỆU PHÚ</h1>
+            <p class="text-xl text-gray-400">Bi kịch Hamlet: Sống Hay Không Sống?</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+
+<div class="lg:col-span-2">
+                
+                
+
+<div class="h-2 bg-gray-600 rounded-full mb-4">
+                    <div id="progress-bar" class="progress-bar-inner h-2 rounded-full bg-blue-500" style="width: 0%"></div>
+                </div>
+
+                
+
+<div class="question-card">
+                    <div id="question-text" class="question-text">
+                        <div class="loading-spinner"></div>
+                        <span id="question-content">Chào mừng bạn đến với trò chơi! Nhấn "Bắt Đầu" để nhận câu hỏi đầu tiên.</span>
+                    </div>
+                </div>
+
+                
+
+<div id="options-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    
+
+</div>
+                
+                
+
+<div id="message-area" class="mt-4 text-center p-3 rounded-lg bg-yellow-900 text-yellow-300 font-medium hidden"></div>
+
+                
+
+<div class="mt-6 flex justify-center space-x-4">
+                    <button id="start-button" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-xl hover:bg-blue-700 transition" onclick="startGame()">BẮT ĐẦU</button>
+                    <button id="next-button" class="px-8 py-3 bg-green-600 text-white font-bold rounded-lg shadow-xl hover:bg-green-700 transition hidden" onclick="confirmOrLoadNextQuestion()">CÂU KẾ TIẾP</button>
+                </div>
+            </div>
+
+            
+
+<div class="lg:col-span-1">
+                
+
+<div class="help-section">
+                    <h2 class="text-xl font-bold text-yellow-400 mb-4 flex items-center">
+                        <i data-lucide="help-circle" class="w-6 h-6 mr-2"></i> Quyền Trợ Giúp
+                    </h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="help-50-50" class="help-button p-3 bg-gray-600 rounded-lg text-white text-sm font-semibold hover:bg-gray-700 transition" onclick="useHelp('50:50')">
+                            50:50
+                        </button>
+                        <button id="help-audience" class="help-button p-3 bg-gray-600 rounded-lg text-white text-sm font-semibold hover:bg-gray-700 transition" onclick="useHelp('audience')">
+                            Khán Giả
+                        </button>
+                        <button id="help-survey" class="help-button p-3 bg-gray-600 rounded-lg text-white text-sm font-semibold hover:bg-gray-700 transition" onclick="useHelp('survey')">
+                            Khảo Sát
+                        </button>
+                        <button id="help-call" class="help-button p-3 bg-gray-600 rounded-lg text-white text-sm font-semibold hover:bg-gray-700 transition" onclick="useHelp('call')">
+                            Nhà Thông Thái
+                        </button>
+                    </div>
+                </div>
+
+                
+
+<div class="quiz-ladder mt-6">
+                    <h2 class="text-xl font-bold text-yellow-400 mb-3 flex items-center">
+                        <i data-lucide="trophy" class="w-6 h-6 mr-2"></i> Thang Tiền Thưởng
+                    </h2>
+                    <div id="money-ladder" class="space-y-1">
+                        
+
+</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    
+
+<div id="quiz-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" class="modal-title">Tiêu Đề</h3>
+            <div id="modal-body" class="text-gray-300 mb-4">Nội dung thông báo.</div>
+            <div class="text-right flex justify-end space-x-3">
+                <button id="modal-secondary-button" class="hidden px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"></button>
+                <button id="modal-close-button" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition" onclick="closeModal()">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    
+
+<script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        setLogLevel('Debug');
+
+        // Biến toàn cục từ Canvas (BẮT BUỘC)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db;
+        let auth;
+        let userId;
+        
+        // Cờ cho biết game đã sẵn sàng chưa (sau khi load trạng thái/auth)
+        let isGameReady = false; 
+
+        // --- KHỞI TẠO FIREBASE VÀ XÁC THỰC ---
+        window.initFirebase = async function() {
+            if (!firebaseConfig) {
+                console.error("Firebase config is missing.");
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                window.db = db; 
+                window.auth = auth;
+
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                userId = auth.currentUser?.uid || crypto.randomUUID();
+                window.userId = userId; 
+                console.log("Firebase initialized. User ID:", userId);
+                
+                loadMoneyLadder(); 
+                isGameReady = true;
+
+            } catch (error) {
+                console.error("Firebase Auth/Init Error:", error);
+                window.showModal("Lỗi Xác Thực", "Không thể kết nối đến Firebase.");
+            }
+        }
+
+        // --- LƯU TRỮ VÀ LẮNG NGHE DATA ---
+        
+        // Thang tiền thưởng với các mốc an toàn
+        const MONEY_LADDER_DATA = [
+            { level: 15, prize: '150,000,000', safe: true },
+            { level: 14, prize: '85,000,000', safe: false },
+            { level: 13, prize: '60,000,000', safe: false },
+            { level: 12, prize: '40,000,000', safe: false },
+            { level: 11, prize: '30,000,000', safe: false },
+            { level: 10, prize: '22,000,000', safe: true }, // Mốc an toàn 2
+            { level: 9, prize: '14,000,000', safe: false },
+            { level: 8, prize: '10,000,000', safe: false },
+            { level: 7, prize: '6,000,000', safe: false },
+            { level: 6, prize: '3,000,000', safe: false },
+            { level: 5, prize: '2,000,000', safe: true }, // Mốc an toàn 1
+            { level: 4, prize: '1,000,000', safe: false },
+            { level: 3, prize: '600,000', safe: false },
+            { level: 2, prize: '400,000', safe: false },
+            { level: 1, prize: '200,000', safe: false },
+        ].reverse();
+
+        window.MONEY_LADDER_DATA = MONEY_LADDER_DATA;
+
+        function getGameDocRef() {
+            if (!db || !userId) return null;
+            return doc(db, 'artifacts', appId, 'users', userId, 'quiz', 'hamlet_game_state');
+        }
+
+        window.saveGameState = async function(state) {
+            const docRef = getGameDocRef();
+            if (docRef) {
+                try {
+                    await setDoc(docRef, state, { merge: true });
+                } catch (e) {
+                    console.error("Error saving game state:", e);
+                }
+            }
+        }
+
+        window.loadGameState = function() {
+            const docRef = getGameDocRef();
+            if (docRef) {
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists() && isGameReady) { // Chỉ cập nhật UI nếu Firebase đã sẵn sàng
+                        const state = docSnap.data();
+                        console.log("Game state loaded:", state);
+                        updateUI(state);
+                        // Cập nhật currentQuestion sau khi load trạng thái
+                        if (state.currentQuestionIndex >= 0 && state.currentQuestionIndex < state.questions.length) {
+                             window.currentQuestion = state.questions[state.currentQuestionIndex];
+                        }
+                    } else if (!docSnap.exists() && isGameReady) {
+                        console.log("No game state found. Creating new state.");
+                        resetGame(false); 
+                    }
+                }, (error) => {
+                    console.error("Error listening to game state:", error);
+                });
+                return unsubscribe;
+            }
+            return () => {}; 
+        }
+
+    </script>
+    <script>
+        // --- DATA MOCK CHO CÂU HỎI (Đã mở rộng lên 15 câu) ---
+        const RAW_QUESTIONS = [
+            // Cấp độ 1-5 (Dễ)
+            { text: "Trong độc thoại 'To be, or not to be', Hamlet chủ yếu đấu tranh với lựa chọn nào?", options: { A: "Chọn giữa trả thù và tha thứ cho Claudius.", B: "Chọn giữa sống tiếp với đau khổ hay kết thúc cuộc đời (tự tử).", C: "Chọn giữa rời Đan Mạch hay ở lại triều đình.", D: "Chọn giữa Ophelia và mẹ mình, Gertrude.", }, answer: "B", difficulty: 1 },
+            { text: "Ai là người bị Hamlet vô tình giết chết, tưởng nhầm là Claudius ẩn sau tấm màn?", options: { A: "Horatio", B: "Rosencrantz", C: "Polonius", D: "Laertes", }, answer: "C", difficulty: 1 },
+            { text: "Hamlet sử dụng vở kịch 'Cái bẫy chuột' ('The Mousetrap') với mục đích chính là gì?", options: { A: "An ủi mẹ mình.", B: "Kiểm tra phản ứng và xác định tội lỗi của Vua Claudius.", C: "Khiến Ophelia ghen tuông.", D: "Mua vui cho toàn bộ triều đình.", }, answer: "B", difficulty: 1 },
+            { text: "Ai là người bạn duy nhất mà Hamlet tin tưởng và nhờ kể lại câu chuyện của mình?", options: { A: "Ophelia", B: "Horatio", C: "Fortinbras", D: "Guildenstern", }, answer: "B", difficulty: 1 },
+            { text: "Vua Claudius đã ám sát anh trai mình (Vua Hamlet) bằng cách nào?", options: { A: "Đâm bằng kiếm độc", B: "Đổ thuốc độc vào tai", C: "Bóp cổ", D: "Đẩy xuống vách đá", }, answer: "B", difficulty: 1 },
+            
+            // Cấp độ 6-10 (Trung bình)
+            { text: "Cụm từ nổi tiếng 'Có một điều gì đó mục nát ở vương quốc Đan Mạch' được thốt ra bởi ai?", options: { A: "Hamlet", B: "Horatio", C: "Marcellus", D: "Ghost (Hồn ma)", }, answer: "C", difficulty: 2 },
+            { text: "Hamlet đã đuổi Ophelia đi và khuyên nàng nên 'Đi vào đâu'?", options: { A: "Tu viện (Nunnery)", B: "Lâu đài của Claudius", C: "Phòng ngủ của mẹ", D: "Pháp", }, answer: "A", difficulty: 2 },
+            { text: "Mục đích của chuyến đi đến Anh mà Claudius sắp đặt cho Hamlet là gì?", options: { A: "Gửi thư bí mật cho Nữ hoàng Anh.", B: "Hồi phục sức khỏe cho Hamlet.", C: "Đảm bảo rằng Hamlet sẽ bị giết ngay khi đến nơi.", D: "Học tập thêm kiến thức chính trị.", }, answer: "C", difficulty: 2 },
+            { text: "Ophelia chết như thế nào?", options: { A: "Tự tử bằng dao.", B: "Bị Hamlet giết.", C: "Chết đuối (có thể do tự tử hoặc tai nạn).", D: "Bị đầu độc.", }, answer: "C", difficulty: 2 },
+            { text: "Tên của Nữ hoàng (mẹ Hamlet) là gì?", options: { A: "Ophelia", B: "Gertrude", C: "Desdemona", D: "Cordelia", }, answer: "B", difficulty: 2 },
+
+            // Cấp độ 11-15 (Khó)
+            { text: "Vở kịch 'Hamlet' được cho là lấy cảm hứng từ truyền thuyết Bắc Âu nào?", options: { A: "Beowulf", B: "Sigurd", C: "Amleth", D: "Volsunga Saga", }, answer: "C", difficulty: 3 },
+            { text: "Khung xương đầu lâu (Yorick) mà Hamlet cầm trong tay là của ai?", options: { A: "Một người lính vô danh.", B: "Người hầu cũ của Vua Hamlet.", C: "Người đánh xe của Hamlet thời thơ ấu.", D: "Người hề của triều đình.", }, answer: "D", difficulty: 3 },
+            { text: "Fortinbras là ai?", options: { A: "Vua của Đan Mạch sau khi Claudius chết.", B: "Hoàng tử trẻ của Na Uy, người lên ngôi Đan Mạch sau bi kịch.", C: "Một chỉ huy quân đội Đan Mạch.", D: "Người yêu của Ophelia trước khi Hamlet xuất hiện.", }, answer: "B", difficulty: 3 },
+            { text: "Trong màn kịch cuối, Claudius chết vì nguyên nhân nào?", options: { A: "Bị Hamlet đâm bằng kiếm độc.", B: "Uống cốc rượu độc do mình chuẩn bị.", C: "Cả A và B (Bị đâm và bị ép uống rượu độc).", D: "Chết do đau tim.", }, answer: "C", difficulty: 3 },
+            { text: "Hamlet nói lời độc thoại 'To be, or not to be' trong Hồi (Act) nào của vở kịch?", options: { A: "Hồi I", B: "Hồi II", C: "Hồi III", D: "Hồi IV", }, answer: "C", difficulty: 3 },
+        ];
+        
+        // --- LOGIC XÁO TRỘN CÂU HỎI ---
+
+        /**
+         * Hàm xáo trộn mảng (Fisher-Yates)
+         * @param {Array} array - Mảng cần xáo trộn
+         */
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        /**
+         * Xáo trộn câu hỏi trong các nhóm độ khó và gán level.
+         */
+        function prepareQuestions() {
+            const groups = { 1: [], 2: [], 3: [] };
+            
+            // Chia nhóm
+            RAW_QUESTIONS.forEach(q => {
+                groups[q.difficulty].push(q);
+            });
+
+            // Xáo trộn trong từng nhóm
+            const shuffledGroup1 = shuffleArray(groups[1]);
+            const shuffledGroup2 = shuffleArray(groups[2]);
+            const shuffledGroup3 = shuffleArray(groups[3]);
+
+            // Gộp lại và gán level
+            const finalQuestions = [...shuffledGroup1, ...shuffledGroup2, ...shuffledGroup3];
+
+            return finalQuestions.map((q, index) => ({
+                ...q,
+                level: index + 1, // Gán level từ 1 đến 15
+                prize: MONEY_LADDER_DATA[index].prize,
+                answered: false
+            }));
+        }
+        
+        // --- BIẾN VÀ TRẠNG THÁI GAME ---
+        let gameState = {};
+        let currentQuestion = null;
+        let isProcessing = false; 
+        let countdownInterval = null; // Biến cho đồng hồ đếm ngược
+
+        const optionsMap = { 0: 'A', 1: 'B', 2: 'C', 3: 'D' };
+        
+        // --- HIỂN THỊ MODAL (Hộp thoại) ---
+        window.showModal = function(title, body, onClose, buttonText = "Đóng", showSecondary = false, secondaryText = "", onSecondaryClick = null) {
+            const modal = document.getElementById('quiz-modal');
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-body').innerHTML = body;
+            
+            const closeButton = document.getElementById('modal-close-button');
+            closeButton.textContent = buttonText;
+            closeButton.onclick = () => {
+                closeModal();
+                if (onClose) onClose();
+            };
+
+            const secondaryButton = document.getElementById('modal-secondary-button');
+            if (showSecondary) {
+                secondaryButton.textContent = secondaryText;
+                secondaryButton.classList.remove('hidden');
+                secondaryButton.onclick = () => {
+                    closeModal();
+                    if (onSecondaryClick) onSecondaryClick();
+                };
+            } else {
+                secondaryButton.classList.add('hidden');
+            }
+
+            modal.classList.add('open');
+        }
+
+        window.closeModal = function() {
+            const modal = document.getElementById('quiz-modal');
+            modal.classList.remove('open');
+            document.getElementById('modal-close-button').onclick = closeModal; 
+            document.getElementById('modal-close-button').textContent = "Đóng";
+            document.getElementById('modal-secondary-button').classList.add('hidden');
+        }
+
+
+        // --- LOGIC TRÒ CHƠI ---
+
+        function resetGame(forceSave = true) {
+            const initialQuestions = prepareQuestions(); // Xáo trộn câu hỏi mới
+
+            gameState = {
+                currentLevel: 0,
+                score: '0',
+                questions: initialQuestions,
+                helpsUsed: {
+                    '50:50': false,
+                    'audience': false,
+                    'survey': false, 
+                    'call': false
+                },
+                isGameOver: false,
+                isGameWon: false,
+                currentQuestionIndex: -1,
+                correctAnswer: null,
+                selectedOption: null
+            };
+            
+            document.getElementById('question-content').textContent = `Chào mừng người chơi: ${window.userId ? window.userId.substring(0, 8) : 'Khách'}... Nhấn "Bắt Đầu".`;
+            document.getElementById('options-grid').innerHTML = '';
+            document.getElementById('start-button').classList.remove('hidden');
+            document.getElementById('next-button').classList.add('hidden');
+            document.getElementById('message-area').classList.add('hidden');
+            
+            document.querySelectorAll('.help-button').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                btn.style.backgroundColor = '#4b5563';
+            });
+
+            currentQuestion = null;
+            
+            if (forceSave) window.saveGameState(gameState);
+            updateUI(gameState);
+        }
+
+        window.startGame = function() {
+            resetGame(false); 
+            gameState.currentQuestionIndex = 0;
+            gameState.currentLevel = 1;
+            window.saveGameState(gameState); 
+            loadQuestion(0);
+            document.getElementById('start-button').classList.add('hidden');
+            document.getElementById('next-button').classList.add('hidden');
+        }
+
+        /**
+         * Logic kiểm tra mốc an toàn và hỏi người chơi có muốn dừng không.
+         */
+        window.confirmOrLoadNextQuestion = function() {
+            const nextLevel = gameState.currentLevel + 1;
+            
+            if (nextLevel === 5 || nextLevel === 10 || nextLevel === 15) {
+                const prize = MONEY_LADDER_DATA.find(item => item.level === gameState.currentLevel)?.prize || '0';
+                
+                showModal("DỪNG CUỘC CHƠI?", 
+                    `<p>Chúc mừng, bạn đã đạt mốc ${gameState.currentLevel} và có trong tay ${prize} VNĐ!</p>
+                    <p class="mt-3 font-semibold text-yellow-400">Bạn có muốn DỪNG CUỘC CHƠI và ra về với số tiền này, hay MẠO HIỂM chơi tiếp câu ${nextLevel}?</p>`, 
+                    null, // onClose
+                    "Tiếp Tục", // buttonText (primary)
+                    true, // showSecondary
+                    "Dừng Chơi", // secondaryText
+                    () => endGame(true, prize) // onSecondaryClick (Dừng chơi)
+                );
+                
+                // Nút "Tiếp Tục" của modal sẽ gọi lại hàm loadNextQuestion nội bộ
+                document.getElementById('modal-close-button').onclick = () => {
+                    closeModal();
+                    loadNextQuestionInternal();
+                };
+            } else {
+                loadNextQuestionInternal();
+            }
+        }
+        
+        function loadNextQuestionInternal() {
+            if (gameState.currentLevel >= MONEY_LADDER_DATA.length) {
+                endGame(true); 
+                return;
+            }
+            
+            gameState.currentQuestionIndex++;
+            gameState.currentLevel++;
+            gameState.selectedOption = null;
+            gameState.correctAnswer = null;
+
+            window.saveGameState(gameState);
+            loadQuestion(gameState.currentQuestionIndex);
+            
+            document.getElementById('next-button').classList.add('hidden');
+            document.getElementById('message-area').classList.add('hidden');
+        }
+        
+        function loadQuestion(index) {
+            if (index < 0 || index >= gameState.questions.length) return;
+
+            currentQuestion = gameState.questions[index];
+            window.currentQuestion = currentQuestion; // Gán ra global để các hàm trợ giúp dùng
+
+            document.getElementById('question-content').textContent = `Câu ${currentQuestion.level} (${currentQuestion.prize} VNĐ): ${currentQuestion.text}`;
+            renderOptions(currentQuestion.options);
+
+            const progress = (currentQuestion.level / MONEY_LADDER_DATA.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            
+            updateUI(gameState);
+        }
+
+        function renderOptions(options) {
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            const keys = ['A', 'B', 'C', 'D'];
+            
+            keys.forEach(key => {
+                const text = options[key];
+                const button = document.createElement('button');
+                button.className = 'option-button p-4 rounded-lg flex items-center text-lg';
+                button.id = `option-${key}`;
+                
+                button.onclick = (event) => checkAnswer(key, event); 
+
+                button.innerHTML = `<span class="option-letter mr-4 bg-gray-700 w-8 h-8 flex items-center justify-center rounded-full">${key}</span> <span>${text}</span>`;
+                
+                grid.appendChild(button);
+            });
+            isProcessing = false; 
+            document.body.classList.remove('loading-active');
+        }
+
+
+        window.checkAnswer = function(selectedOption) {
+            if (isProcessing || gameState.isGameOver) return; 
+
+            isProcessing = true;
+            document.body.classList.add('loading-active');
+            
+            gameState.selectedOption = selectedOption;
+            const correct = currentQuestion.answer;
+            const selectedButton = document.getElementById(`option-${selectedOption}`);
+
+            document.querySelectorAll('.option-button').forEach(btn => btn.disabled = true);
+            
+            selectedButton.style.backgroundColor = '#fcd34d'; 
+            selectedButton.style.color = '#1f2937';
+
+            setTimeout(() => {
+                
+                if (selectedOption === correct) {
+                    selectedButton.classList.add('correct-answer');
+                    gameState.score = MONEY_LADDER_DATA.find(item => item.level === gameState.currentLevel)?.prize || '0';
+
+                    document.getElementById('message-area').textContent = `CHÍNH XÁC! Bạn đã nhận được ${gameState.score} VNĐ.`;
+                    document.getElementById('message-area').classList.remove('hidden');
+
+                    if (gameState.currentLevel === MONEY_LADDER_DATA.length) {
+                        endGame(true);
+                    } else {
+                        document.getElementById('next-button').classList.remove('hidden');
+                    }
+                } else {
+                    selectedButton.classList.add('wrong-answer');
+                    document.getElementById(`option-${correct}`).classList.add('correct-answer');
+                    
+                    document.getElementById('message-area').textContent = `SAI RỒI! Đáp án đúng là ${correct}. Trò chơi kết thúc.`;
+                    document.getElementById('message-area').classList.remove('hidden');
+
+                    endGame(false);
+                }
+
+                window.saveGameState(gameState);
+                isProcessing = false;
+                document.body.classList.remove('loading-active');
+                updateUI(gameState); 
+
+            }, 2000); 
+        }
+
+        /**
+         * Tìm giải thưởng an toàn gần nhất
+         * @param {number} level - Cấp độ thất bại (hoặc cấp độ cuối cùng đã vượt qua nếu endGame(true))
+         * @returns {string} - Giá trị tiền thưởng an toàn
+         */
+        function getSafePrize(level) {
+            let prize = '0';
+            // Các mốc an toàn là 5, 10, 15
+            if (level >= 15) return MONEY_LADDER_DATA.find(item => item.level === 15)?.prize;
+            if (level >= 10) return MONEY_LADDER_DATA.find(item => item.level === 10)?.prize;
+            if (level >= 5) return MONEY_LADDER_DATA.find(item => item.level === 5)?.prize;
+            return prize; // Dưới câu 5 là 0
+        }
+
+        function endGame(isWon, fixedPrize = null) {
+            gameState.isGameOver = true;
+            gameState.isGameWon = isWon;
+            
+            let finalPrize;
+            if (fixedPrize !== null) { // Người chơi chủ động dừng
+                finalPrize = fixedPrize;
+            } else if (isWon) { // Thắng tất cả
+                finalPrize = MONEY_LADDER_DATA[MONEY_LADDER_DATA.length - 1].prize;
+            } else { // Thua
+                // Trả về mốc an toàn dựa trên level vừa trả lời SAI (currentLevel - 1)
+                finalPrize = getSafePrize(gameState.currentLevel - 1);
+            }
+
+            const title = isWon ? "CHÚC MỪNG!" : "GAME OVER";
+            const body = isWon && fixedPrize === null
+                ? `Bạn đã hoàn thành tất cả câu hỏi và giành giải thưởng cao nhất: ${finalPrize} VNĐ!`
+                : (fixedPrize !== null
+                    ? `Bạn quyết định DỪNG CUỘC CHƠI. Bạn ra về với số tiền thưởng: ${finalPrize} VNĐ!`
+                    : `Rất tiếc, bạn đã trả lời sai ở câu ${gameState.currentLevel}. Giải thưởng an toàn cuối cùng của bạn là: ${finalPrize} VNĐ.`);
+            
+            window.saveGameState(gameState);
+            showModal(title, body, () => resetGame(true), "Chơi Lại");
+
+            document.getElementById('next-button').classList.add('hidden');
+            document.getElementById('start-button').classList.remove('hidden');
+        }
+
+        // --- HỖ TRỢ (AI) ---
+
+        /**
+         * Gọi API Gemini để nhận trợ giúp
+         */
+        async function callGeminiApi(systemPrompt, userQuery) {
+            const apiKey = ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                tools: [{ "google_search": {} }] 
+            };
+
+            const retries = 3;
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && i < retries - 1) {
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                            continue;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const candidate = result.candidates?.[0];
+
+                    if (candidate && candidate.content?.parts?.[0]?.text) {
+                        return { text: candidate.content.parts[0].text, sources: [] };
+                    }
+                    throw new Error("Không tìm thấy nội dung phản hồi hợp lệ từ AI.");
+
+                } catch (error) {
+                    if (i === retries - 1) {
+                        throw error;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+                }
+            }
+        }
+
+        window.useHelp = async function(helpType) {
+            if (gameState.helpsUsed[helpType] || gameState.isGameOver || !currentQuestion) {
+                showModal("Không thể dùng", `Bạn đã dùng hết lượt trợ giúp "${getHelpName(helpType)}" cho trò chơi này hoặc trò chơi chưa bắt đầu.`, null, "Đóng");
+                return;
+            }
+
+            gameState.helpsUsed[helpType] = true;
+            window.saveGameState(gameState);
+            document.getElementById(`help-${helpType.replace(':', '-')}`).disabled = true;
+            document.getElementById(`help-${helpType.replace(':', '-')}`).classList.add('opacity-50');
+
+            switch (helpType) {
+                case '50:50':
+                    apply5050();
+                    break;
+                case 'audience':
+                    applyAudienceHelp();
+                    break;
+                case 'survey':
+                    applySurveyHelp();
+                    break;
+                case 'call':
+                    await applyCallHelp();
+                    break;
+            }
+
+            updateUI(gameState);
+        }
+
+        function getHelpName(helpType) {
+            switch(helpType) {
+                case '50:50': return '50:50';
+                case 'audience': return 'Khán Giả';
+                case 'survey': return 'Khảo Sát';
+                case 'call': return 'Nhà Thông Thái';
+                default: return helpType;
+            }
+        }
+
+        /**
+         * Quyền trợ giúp 50:50: loại bỏ 2 đáp án sai ngẫu nhiên.
+         */
+        function apply5050() {
+            const correct = currentQuestion.answer;
+            const options = ['A', 'B', 'C', 'D'];
+            
+            let wrongOptions = options.filter(o => o !== correct);
+            const hiddenOptions = [];
+            
+            // Chọn 2 đáp án sai ngẫu nhiên để loại bỏ
+            while (hiddenOptions.length < 2) {
+                const randomIndex = Math.floor(Math.random() * wrongOptions.length);
+                hiddenOptions.push(wrongOptions[randomIndex]);
+                wrongOptions.splice(randomIndex, 1); 
+            }
+
+            hiddenOptions.forEach(key => {
+                const button = document.getElementById(`option-${key}`);
+                if (button) {
+                    button.disabled = true;
+                    button.style.opacity = '0.3';
+                    button.style.textDecoration = 'line-through';
+                }
+            });
+
+            showModal("Trợ Giúp 50:50", `Hai phương án sai (${hiddenOptions.join(', ')}) đã bị loại bỏ. Chúc may mắn!`, null, "Tiếp tục");
+        }
+        
+        /**
+         * Quyền trợ giúp Khán Giả: mô phỏng cuộc tranh luận ngẫu nhiên.
+         */
+        function applyAudienceHelp() {
+            const correct = currentQuestion.answer;
+            const options = ['A', 'B', 'C', 'D'];
+            
+            let body = '<p class="font-bold text-lg mb-4 text-center text-yellow-300">Nhóm 5 Khán Giả tranh luận:</p>';
+            body += '<div class="space-y-3 p-3 bg-gray-800 rounded-lg max-h-60 overflow-y-auto">';
+
+            // Tạo phản hồi ngẫu nhiên cho 5 "khán giả"
+            const audienceResponses = [];
+            for (let i = 1; i <= 5; i++) { 
+                let chosenOption;
+                // Khán giả có 65% chọn đúng, 35% chọn sai ngẫu nhiên
+                if (Math.random() < 0.65) { 
+                    chosenOption = correct;
+                } else { 
+                    const wrongOptions = options.filter(o => o !== correct);
+                    chosenOption = wrongOptions[Math.floor(Math.random() * wrongOptions.length)];
+                }
+                
+                const comment = getAudienceComment(chosenOption, i);
+                audienceResponses.push({ id: i, option: chosenOption, comment: comment });
+            }
+            
+            // Xáo trộn thứ tự tranh luận
+            shuffleArray(audienceResponses);
+
+            audienceResponses.forEach(res => {
+                const badgeClass = res.option === correct ? 'bg-green-600' : 'bg-red-500';
+                body += `
+                    <div class="flex items-start text-sm">
+                        <span class="font-bold w-12 flex-shrink-0 text-blue-400">Khán giả ${res.id}:</span>
+                        <div class="flex-grow ml-2">
+                            <span class="font-semibold ${badgeClass} text-white px-2 py-0.5 rounded-full mr-2">${res.option}</span>
+                            <span>${res.comment}</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            body += '</div><p class="mt-4 text-sm text-gray-400">Lưu ý: Khán giả có thể tranh luận! Hãy đưa ra quyết định của bạn.</p>';
+            showModal("Trợ Giúp Khán Giả", body, null, "Tiếp tục");
+        }
+
+        function getAudienceComment(option, id) {
+            const commentsCorrect = [
+                `Tôi tin chắc chắn đây là ${option}! Đã từng đọc qua chi tiết này.`,
+                `Không cần phải suy nghĩ, đáp án ${option} là chính xác.`,
+                `Tôi nhớ rõ chi tiết này trong vở kịch, là ${option}.`
+            ];
+            const commentsWrong = [
+                `Hmm, tôi đoán là ${option}. Có vẻ hợp lý nhất.`,
+                `Tôi không chắc 100%, nhưng tôi thiên về ${option} hơn.`,
+                `Tôi nghe nói chi tiết đó có liên quan, nên tôi chọn ${option}.`
+            ];
+            
+            if (option === currentQuestion.answer) {
+                return commentsCorrect[Math.floor(Math.random() * commentsCorrect.length)];
+            } else {
+                return commentsWrong[Math.floor(Math.random() * commentsWrong.length)];
+            }
+        }
+
+        /**
+         * Quyền trợ giúp Khảo sát: hiển thị tỉ lệ phần trăm ngẫu nhiên (đáp án đúng có xu hướng cao).
+         */
+        function applySurveyHelp() {
+            const correct = currentQuestion.answer;
+            const options = ['A', 'B', 'C', 'D'];
+            
+            let percentages = {};
+            
+            // Gán phần trăm cao cho đáp án đúng (từ 55-85%)
+            let correctWeight = Math.floor(Math.random() * 31) + 55; 
+            percentages[correct] = correctWeight;
+            
+            let totalRemaining = 100 - correctWeight;
+            let remainingOptions = options.filter(o => o !== correct);
+            
+            // Phân bổ phần trăm còn lại một cách ngẫu nhiên
+            let sumRemaining = 0;
+            const weights = [];
+            for(let i=0; i<remainingOptions.length - 1; i++) {
+                // Đảm bảo không vượt quá tổng còn lại
+                const weight = Math.floor(Math.random() * (totalRemaining - sumRemaining));
+                weights.push(weight);
+                sumRemaining += weight;
+            }
+            weights.push(totalRemaining - sumRemaining);
+            
+            // Gán phần trăm vào object
+            remainingOptions.forEach((option, index) => {
+                percentages[option] = weights[index];
+            });
+
+            // Tạo nội dung modal
+            let body = '<p class="font-bold text-lg mb-2 text-center text-yellow-300">Kết quả Khảo sát trường quay:</p>';
+            options.sort().forEach(option => {
+                const percent = percentages[option] || 0;
+                const barColor = percent > 50 ? '#10b981' : '#fcd34d'; 
+                body += `
+                    <div class="flex items-center mb-2">
+                        <span class="font-bold w-10 text-right">${option}:</span>
+                        <div class="survey-bar-container">
+                            <div style="width: ${percent}%; background-color: ${barColor};" class="survey-bar"></div>
+                        </div>
+                        <span class="font-bold w-12 text-left">${percent}%</span>
+                    </div>
+                `;
+            });
+
+            showModal("Trợ Giúp Khảo Sát", body, null, "Tiếp tục");
+        }
+
+        /**
+         * Quyền trợ giúp Nhà Thông Thái (AI): hiển thị gợi ý với tên AI ngẫu nhiên và hẹn giờ 30s.
+         */
+        async function applyCallHelp() {
+            isProcessing = true;
+            document.body.classList.add('loading-active');
+            
+            const aiNames = ["Grok", "Gemini", "Perplexity", "ChatGPT", "Deepseek"];
+            const chosenAI = aiNames[Math.floor(Math.random() * aiNames.length)];
+            const chosenAIColor = chosenAI === "Gemini" ? 'text-blue-400' : 'text-purple-400';
+            const callModalTitle = `Đang kết nối: ${chosenAI} (${30} giây)`;
+
+            // Hiển thị modal chờ
+            showModal(callModalTitle, '<p class="text-center text-lg">Đang gọi cho Nhà Thông Thái... Vui lòng chờ phản hồi.</p><div class="flex justify-center mt-4"><div class="loading-spinner" style="display: block;"></div></div>', null, "Đang tải...");
+
+            try {
+                const systemPrompt = "Act as a world-class literary expert on Shakespeare. You are a 'Wise Man' helping a friend on a quiz show. Provide a brief, helpful, and concise hint (max 2 sentences) to guide the player toward the correct option. DO NOT directly state the correct letter (A, B, C, D). Use Google Search for grounding if necessary.";
+                const userQuery = `Câu hỏi: "${currentQuestion.text}". Các đáp án: A: ${currentQuestion.options.A}, B: ${currentQuestion.options.B}, C: ${currentQuestion.options.C}, D: ${currentQuestion.options.D}.`;
+
+                const aiResponse = await callGeminiApi(systemPrompt, userQuery);
+                
+                const finalBody = `
+                    <p class="text-gray-400 mb-4 flex items-center">
+                        <i data-lucide="phone-call" class="w-5 h-5 mr-2"></i>
+                        <span class="${chosenAIColor} font-bold">${chosenAI}</span> đã trả lời:
+                    </p>
+                    <div class="font-semibold text-white bg-gray-700 p-4 rounded-lg shadow-inner">
+                        ${aiResponse.text}
+                    </div>
+                    <p id="countdown-timer" class="text-sm text-gray-500 mt-3 text-right">Bạn có 30 giây để đọc.</p>
+                `;
+                
+                // Mở modal kết quả với hẹn giờ
+                startCountdownModal(callModalTitle, finalBody, 30);
+
+            } catch (error) {
+                console.error("AI Call Error:", error);
+                showModal("Lỗi Kết Nối AI", "Không thể kết nối đến chuyên gia AI. Vui lòng thử lại sau.", null, "Đóng");
+            } finally {
+                isProcessing = false;
+                document.body.classList.remove('loading-active');
+            }
+        }
+
+        function startCountdownModal(title, body, seconds) {
+            let timeLeft = seconds;
+            
+            // Đặt modal với nút "Đóng" và tiêu đề mới
+            showModal(title, body, null, "Tiếp tục"); 
+
+            const updateTimer = () => {
+                const timerElement = document.getElementById('countdown-timer');
+                if (timerElement) {
+                    timerElement.textContent = `Thời gian còn lại: ${timeLeft} giây.`;
+                }
+            };
+            
+            // Xóa interval cũ nếu có
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            // Bắt đầu đếm ngược
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    // Dù hết giờ, không đóng modal tự động, chỉ cập nhật thông báo
+                    if (document.getElementById('countdown-timer')) {
+                        document.getElementById('countdown-timer').textContent = "Hết giờ! Vui lòng nhấn 'Tiếp tục'.";
+                    }
+                }
+            }, 1000);
+
+            // Gán lại hàm đóng để xóa interval
+            document.getElementById('modal-close-button').onclick = () => {
+                clearInterval(countdownInterval);
+                closeModal();
+            };
+            
+            // Hiển thị kết quả ban đầu
+            updateTimer();
+        }
+
+
+        // --- CẬP NHẬT GIAO DIỆN CHUNG ---
+        
+        function loadMoneyLadder() {
+            const ladderDiv = document.getElementById('money-ladder');
+            ladderDiv.innerHTML = '';
+            
+            MONEY_LADDER_DATA.forEach(item => {
+                const div = document.createElement('div');
+                div.id = `level-${item.level}`;
+                let classes = 'level-item';
+                
+                if (item.safe) {
+                    classes += ' safe-level';
+                }
+                
+                div.className = classes;
+                div.innerHTML = `<span>Câu ${item.level}</span> <span class="font-mono">${item.prize} VNĐ</span>`;
+                
+                ladderDiv.appendChild(div);
+            });
+            updateUI(gameState);
+        }
+
+        function updateUI(state) {
+            // Cập nhật thang tiền
+            document.querySelectorAll('.level-item').forEach(div => {
+                div.classList.remove('current-level');
+                // Đảm bảo các mốc an toàn luôn giữ màu xanh
+                if (div.classList.contains('safe-level')) {
+                    div.style.backgroundColor = '#10b981';
+                } else {
+                    div.style.backgroundColor = '';
+                }
+            });
+
+            const currentLevelItem = document.getElementById(`level-${state.currentLevel}`);
+            if (currentLevelItem) {
+                currentLevelItem.classList.add('current-level');
+            }
+
+            // Cập nhật trạng thái nút trợ giúp
+            if (state.helpsUsed) {
+                for (const [key, used] of Object.entries(state.helpsUsed)) {
+                    const btn = document.getElementById(`help-${key.replace(':', '-')}`);
+                    if (btn) {
+                        btn.disabled = used || state.isGameOver;
+                        if (used || state.isGameOver) {
+                            btn.classList.add('opacity-50');
+                            btn.style.backgroundColor = '#475569';
+                        } else {
+                            btn.classList.remove('opacity-50');
+                            btn.style.backgroundColor = '#4b5563'; 
+                        }
+                    }
+                }
+            }
+
+            // Tải lại icon Lucide
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+
+        // --- KHỞI TẠO GAME ---
+
+        window.onload = async function() {
+            await initFirebase();
+            const unsubscribe = loadGameState(); 
+            
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+</html>
